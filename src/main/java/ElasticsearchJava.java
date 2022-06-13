@@ -219,7 +219,7 @@ public class ElasticsearchJava {
             // e.printStackTrace();
         }
 
-        // Firstly remove "test" if it exists
+        // Secondly remove "test" if it exists
         try {
             DeleteIndexRequest delete_request = new DeleteIndexRequest.Builder()
                     .index("test")
