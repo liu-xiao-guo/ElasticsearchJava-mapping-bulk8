@@ -1,5 +1,6 @@
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
@@ -206,7 +207,6 @@ public class ElasticsearchJava {
 
         ElasticsearchIndicesClient indices = client.indices();
 
-
         // Firstly remove "products" if it exists
         try {
             DeleteIndexRequest delete_request = new DeleteIndexRequest.Builder()
@@ -291,7 +291,7 @@ public class ElasticsearchJava {
             );
         }
 
-        BulkResponse result = client.bulk(br.build());
+        BulkResponse result = client.bulk(br.refresh(Refresh.WaitFor).build());
 
         if (result.errors()) {
             System.out.println("Bulk had errors");
@@ -301,6 +301,23 @@ public class ElasticsearchJava {
                 }
             }
         }
+
+        UpdateByQueryRequest updateByQueryRequest = new UpdateByQueryRequest.Builder()
+                .index("products")
+                .query(q -> q
+                        .match( m -> m
+                                .field("id")
+                                .query("prod1")
+                        )
+                )
+                .script(s -> s.inline( src -> src
+                        .lang("painless")
+                        .source("ctx._source['price'] = 100")
+                ))
+                .build();
+
+        UpdateByQueryResponse response_update = client.updateByQuery(updateByQueryRequest);
+        System.out.println("updated : " + response_update.updated());
 
     }
 }
